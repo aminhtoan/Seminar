@@ -135,7 +135,7 @@ class CommentResponse(CommentBase):
 
 # POSTS ENDPOINTS
 
-@app.get("/posts", response_model=List[PostResponse])
+@app.get("/api/posts", response_model=List[PostResponse])
 async def get_posts():
     """Get all posts"""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -159,7 +159,7 @@ async def get_posts():
             })
         return posts
 
-@app.post("/posts", response_model=PostResponse)
+@app.post("/api/posts", response_model=PostResponse)
 async def create_post(post: PostCreate):
     """Create a new post"""
     post_id = post.id if post.id else str(uuid.uuid4())
@@ -189,7 +189,7 @@ async def create_post(post: PostCreate):
         "commentsCount": 0
     }
 
-@app.get("/posts/{post_id}", response_model=PostResponse)
+@app.get("/api/posts/{post_id}", response_model=PostResponse)
 async def get_post(post_id: str):
     """Get a specific post by ID"""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -213,7 +213,7 @@ async def get_post(post_id: str):
             "commentsCount": row[6]
         }
 
-@app.delete("/posts/{post_id}")
+@app.delete("/api/posts/{post_id}")
 async def delete_post(post_id: str):
     """Delete a post"""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -228,7 +228,7 @@ async def delete_post(post_id: str):
 
 # COMMENTS ENDPOINTS
 
-@app.get("/posts/{post_id}/comments", response_model=List[CommentResponse])
+@app.get("/api/posts/{post_id}/comments", response_model=List[CommentResponse])
 async def get_comments(post_id: str):
     """Get all comments for a post"""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -257,7 +257,7 @@ async def get_comments(post_id: str):
             })
         return comments
 
-@app.post("/posts/{post_id}/comments", response_model=CommentResponse)
+@app.post("/api/posts/{post_id}/comments", response_model=CommentResponse)
 async def create_comment(post_id: str, comment: CommentCreate):
     """Create a comment on a post"""
     # Check if post exists
@@ -295,7 +295,7 @@ async def create_comment(post_id: str, comment: CommentCreate):
 
 # LIKES ENDPOINTS
 
-@app.post("/posts/{post_id}/like")
+@app.post("/api/posts/{post_id}/like")
 async def like_post(post_id: str, username: str):
     """Like a post"""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -332,7 +332,7 @@ async def like_post(post_id: str, username: str):
     
     return {"message": "Post liked successfully"}
 
-@app.delete("/posts/{post_id}/like")
+@app.delete("/api/posts/{post_id}/like")
 async def unlike_post(post_id: str, username: str):
     """Unlike a post"""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -364,7 +364,7 @@ async def unlike_post(post_id: str, username: str):
     return {"message": "Post unliked successfully"}
 
 # HEALTH CHECK
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
