@@ -9,9 +9,10 @@ from fastapi.openapi.utils import get_openapi
 from starlette.responses import FileResponse
 from typing import List
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "sns_api.db")
-OPENAPI_PATH = os.path.join(os.path.dirname(__file__), "..", "openapi.yaml")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+DB_PATH = os.path.join(BASE_DIR, "sns_api.db")
+OPENAPI_PATH = os.path.join(BASE_DIR, "openapi.yaml")
 # Load OpenAPI YAML
 with open(OPENAPI_PATH, "r", encoding="utf-8") as f:
     openapi_yaml = yaml.safe_load(f)

@@ -1,0 +1,30 @@
+version: "3.9"
+
+networks:
+  contoso:
+    driver: bridge
+
+services:
+  contoso-backend:
+    container_name: contoso-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+    ports:
+      - "8080:8080"
+    networks:
+      - contoso
+
+  contoso-frontend:
+    container_name: contoso-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.dotnet
+    ports:
+      - "3030:8080"
+    environment:
+      ApiSettings__BaseUrl: http://contoso-backend:8080/api
+    depends_on:
+      - contoso-backend
+    networks:
+      - contoso

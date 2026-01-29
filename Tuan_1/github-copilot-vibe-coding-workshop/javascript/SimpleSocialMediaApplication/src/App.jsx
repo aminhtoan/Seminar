@@ -7,7 +7,7 @@ import PostModal from './components/PostModal'
 import NameInputModal from './components/NameInputModal'
 import Search from './components/Search'
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = 'http://localhost:8000/api'
 
 function App() {
   const [posts, setPosts] = useState([])

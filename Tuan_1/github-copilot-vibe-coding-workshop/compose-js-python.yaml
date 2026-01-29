@@ -1,0 +1,26 @@
+networks:
+  js-py-net:
+    driver: bridge
+
+services:
+  python-backend:
+    container_name: python-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    ports:
+      - "8000:8000"
+    networks:
+      - js-py-net
+
+  js-frontend:
+    container_name: js-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.javascript
+    ports:
+      - "3000:80"
+    depends_on:
+      - python-backend
+    networks:
+      - js-py-net
