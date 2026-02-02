@@ -1,0 +1,478 @@
+{
+  "name": "Telegram Movie Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "movie-bot-webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "start"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/phimhay",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "phimhay"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/rapchieu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rapchieu"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/timphim",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "timphim"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "help"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-command",
+      "name": "Switch Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.themoviedb.org/3/movie/now_playing",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "={{ $credentials.tmdbApi.apiKey }}"
+            },
+            {
+              "name": "language",
+              "value": "vi-VN"
+            },
+            {
+              "name": "region",
+              "value": "VN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-movies",
+      "name": "Get Now Playing Movies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const movies = $input.first().json.results.slice(0, 5);\n\nlet message = \"🎬 *TOP PHIM HAY ĐANG CHIẾU*\\n\\n\";\n\nmovies.forEach((movie, index) => {\n  message += `${index + 1}. *${movie.title}*\\n`;\n  message += `   ⭐ Điểm: ${movie.vote_average.toFixed(1)}/10\\n`;\n  message += `   📅 Khởi chiếu: ${movie.release_date}\\n`;\n  if (movie.overview) {\n    const shortOverview = movie.overview.substring(0, 100) + (movie.overview.length > 100 ? '...' : '');\n    message += `   📝 ${shortOverview}\\n`;\n  }\n  message += `\\n`;\n});\n\nmessage += \"\\n💡 Gõ /timphim [tên phim] để xem chi tiết\";\n\nreturn [{ json: { text: message } }];"
+      },
+      "id": "format-movies",
+      "name": "Format Movie List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = `🎬 *CHÀO MỪNG ĐẾN VỚI MOVIE BOT*\n\nTôi có thể giúp bạn:\n\n📽️ /phimhay - Xem top phim hay đang chiếu\n🏢 /rapchieu - Tìm rạp chiếu phim gần bạn\n🔍 /timphim [tên] - Tìm kiếm thông tin phim\n❓ /help - Xem hướng dẫn\n\n*Hãy bắt đầu thôi nào!* 🍿`;\n\nreturn [{ json: { text: message } }];"
+      },
+      "id": "welcome-message",
+      "name": "Welcome Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 50]
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = `📖 *HƯỚNG DẪN SỬ DỤNG*\n\n*Các lệnh có sẵn:*\n\n1️⃣ /phimhay\n   → Xem danh sách phim hay đang chiếu\n\n2️⃣ /rapchieu\n   → Tìm rạp chiếu phim gần bạn\n   → Gửi vị trí để tìm chính xác hơn\n\n3️⃣ /timphim [tên phim]\n   → Ví dụ: /timphim Avengers\n   → Tìm kiếm thông tin chi tiết về phim\n\n4️⃣ /help\n   → Xem lại hướng dẫn này\n\n💡 *Mẹo:* Bạn có thể gửi tên phim trực tiếp để tìm kiếm nhanh!`;\n\nreturn [{ json: { text: message } }];"
+      },
+      "id": "help-message",
+      "name": "Help Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const userMessage = $('Telegram Trigger').item.json.message.text;\nconst movieName = userMessage.replace('/timphim', '').trim();\n\nif (!movieName) {\n  return [{ json: { error: true, text: '❌ Vui lòng nhập tên phim\\n\\nVí dụ: /timphim Avengers' } }];\n}\n\nreturn [{ json: { movieName: movieName } }];"
+      },
+      "id": "extract-movie-name",
+      "name": "Extract Movie Name",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 350]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-error",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-error",
+      "name": "IF Error",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 350]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.themoviedb.org/3/search/movie",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "={{ $credentials.tmdbApi.apiKey }}"
+            },
+            {
+              "name": "language",
+              "value": "vi-VN"
+            },
+            {
+              "name": "query",
+              "value": "={{ $json.movieName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "search-movie",
+      "name": "Search Movie",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.first().json.results;\n\nif (!results || results.length === 0) {\n  return [{ json: { text: '❌ Không tìm thấy phim nào\\n\\nHãy thử tìm với từ khóa khác!' } }];\n}\n\nconst movie = results[0];\nlet message = `🎬 *${movie.title}*\\n`;\n\nif (movie.original_title !== movie.title) {\n  message += `(${movie.original_title})\\n`;\n}\n\nmessage += `\\n⭐ *Điểm đánh giá:* ${movie.vote_average.toFixed(1)}/10`;\nmessage += `\\n👥 *Lượt vote:* ${movie.vote_count.toLocaleString()}`;\nmessage += `\\n📅 *Ngày phát hành:* ${movie.release_date || 'Chưa xác định'}`;\nmessage += `\\n🎭 *Dành cho người lớn:* ${movie.adult ? 'Có' : 'Không'}`;\n\nif (movie.overview) {\n  message += `\\n\\n📝 *Nội dung:*\\n${movie.overview}`;\n}\n\nif (movie.poster_path) {\n  message += `\\n\\n🖼️ [Xem poster](https://image.tmdb.org/t/p/w500${movie.poster_path})`;\n}\n\nmessage += `\\n\\n💡 Gõ /rapchieu để tìm rạp chiếu gần bạn!`;\n\nreturn [{ json: { text: message } }];"
+      },
+      "id": "format-search-result",
+      "name": "Format Search Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cinemas = [\n  {\n    name: \"CGV Vincom Center\",\n    address: \"72 Lê Thánh Tôn, Q.1, TP.HCM\",\n    phone: \"1900 6017\"\n  },\n  {\n    name: \"Lotte Cinema Nam Sài Gòn\",\n    address: \"469 Nguyễn Hữu Thọ, Q.7, TP.HCM\",\n    phone: \"1900 6017\"\n  },\n  {\n    name: \"Galaxy Nguyễn Du\",\n    address: \"116 Nguyễn Du, Q.1, TP.HCM\",\n    phone: \"1900 2224\"\n  },\n  {\n    name: \"BHD Star Bitexco\",\n    address: \"L3&4, TTTM Icon 68, 2 Hải Triều, Q.1, TP.HCM\",\n    phone: \"19002099\"\n  },\n  {\n    name: \"Cinestar Hai Bà Trưng\",\n    address: \"271 Nguyễn Trãi, Q.1, TP.HCM\",\n    phone: \"028 3925 5255\"\n  }\n];\n\nlet message = \"🏢 *DANH SÁCH RẠP CHIẾU PHIM*\\n\\n\";\n\ncinemas.forEach((cinema, index) => {\n  message += `${index + 1}. *${cinema.name}*\\n`;\n  message += `   📍 ${cinema.address}\\n`;\n  message += `   📞 ${cinema.phone}\\n\\n`;\n});\n\nmessage += \"💡 *Mẹo:* Gửi vị trí của bạn để tìm rạp gần nhất!\\n\";\nmessage += \"🎫 Đặt vé trực tiếp tại website của rạp\";\n\nreturn [{ json: { text: message } }];"
+      },
+      "id": "cinema-list",
+      "name": "Cinema List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 650]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-send",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1750, 300]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Command": {
+      "main": [
+        [
+          {
+            "node": "Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Now Playing Movies",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cinema List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Movie Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Help Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Now Playing Movies": {
+      "main": [
+        [
+          {
+            "node": "Format Movie List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Movie List": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Welcome Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Help Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Movie Name": {
+      "main": [
+        [
+          {
+            "node": "IF Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Error": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Movie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Movie": {
+      "main": [
+        [
+          {
+            "node": "Format Search Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Search Result": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cinema List": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "telegram",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "movie",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "pinData": {}
+}

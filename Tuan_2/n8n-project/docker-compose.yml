@@ -1,0 +1,91 @@
+services:
+  # ============================================
+  # N8N - Workflow Automation Platform
+  # Dùng để xây dựng Telegram Chatbot
+  # ============================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      # Authentication
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
+      # Database Configuration
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n_user
+      - DB_POSTGRESDB_PASSWORD=n8n_password
+      # Webhook Configuration (cho Telegram Bot)
+      - WEBHOOK_URL=https://sempiternal-maddison-reservedly.ngrok-free.dev/
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      # Encryption Key (thay đổi trong production)
+      - N8N_ENCRYPTION_KEY=your-encryption-key-change-me
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    networks:
+      - n8n-network
+
+  # ============================================
+  # PostgreSQL - Database
+  # Lưu trữ workflows, credentials, execution logs
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: n8n-postgres
+    environment:
+      - POSTGRES_USER=n8n_user
+      - POSTGRES_PASSWORD=n8n_password
+      - POSTGRES_DB=n8n
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U n8n_user -d n8n"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - n8n-network
+
+  # ============================================
+  # Redis - Cache & Queue
+  # Tăng hiệu suất xử lý
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: n8n-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - n8n-network
+
+volumes:
+  n8n_data:
+  postgres_data:
+  redis_data:
+
+networks:
+  n8n-network:
+    driver: bridge
