@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  javascript-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.javascript
+    container_name: js_app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - python-app
+
+  python-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: py_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./python:/app
+      - ./openapi.yaml:/app/openapi.yaml
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

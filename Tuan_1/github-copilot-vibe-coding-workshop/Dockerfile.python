@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements trước để cache tốt hơn
+COPY python/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy toàn bộ source python
+COPY python/ .
+
+# Chạy app (đổi nếu bạn chạy file khác)
+CMD ["python", "main.py"]

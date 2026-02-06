@@ -10,7 +10,11 @@ from starlette.responses import FileResponse
 from typing import List
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "sns_api.db")
-OPENAPI_PATH = os.path.join(os.path.dirname(__file__), "..", "openapi.yaml")
+
+# Kiểm tra cả hai đường dẫn (local dev và Docker)
+OPENAPI_PATH_DOCKER = os.path.join(os.path.dirname(__file__), "openapi.yaml")
+OPENAPI_PATH_LOCAL = os.path.join(os.path.dirname(__file__), "..", "openapi.yaml")
+OPENAPI_PATH = OPENAPI_PATH_DOCKER if os.path.exists(OPENAPI_PATH_DOCKER) else OPENAPI_PATH_LOCAL
 
 # Load OpenAPI YAML
 with open(OPENAPI_PATH, "r", encoding="utf-8") as f:
