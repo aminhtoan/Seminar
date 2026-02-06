@@ -67,8 +67,8 @@ Tạo workflow với các nodes sau:
 
 2. **Switch Node** - Phân loại tin nhắn
    - Điều kiện 1: `/phimhay` → Lấy danh sách phim hot
-   - Điều kiện 2: `/rapchieu` → Tìm rạp chiếu gần
-   - Điều kiện 3: `/timphim` → Tìm kiếm phim
+   - Điều kiện 2: `/rap` → Tìm rạp chiếu gần
+   - Điều kiện 3: `/movie` → Tìm kiếm phim
 
 3. **HTTP Request Node** - Gọi API phim
    ```
