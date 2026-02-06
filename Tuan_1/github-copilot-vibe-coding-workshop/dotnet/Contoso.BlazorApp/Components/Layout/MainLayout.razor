@@ -1,10 +1,13 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="flex min-h-screen bg-gray-50">
-    <NavMenu />
-    <main class="flex-1 ml-20 main-content p-4 flex flex-col items-center">
+<div class="app">
+    <Header />
+    <div class="main-content">
         @Body
-    </main>
+    </div>
+    <footer class="footer">
+        <p>Simple Social Media © @DateTime.Now.Year</p>
+    </footer>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

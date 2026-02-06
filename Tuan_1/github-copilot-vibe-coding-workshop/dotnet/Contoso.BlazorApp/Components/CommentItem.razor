@@ -4,56 +4,43 @@
 @inject ApiService ApiService
 @inject IJSRuntime JSRuntime
 
-<div class="flex flex-col w-full py-3 border-b border-gray-300">
-    <div class="flex items-center mb-2">
-        <div class="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 mr-2"></div>
-        <div class="text-sm font-bold text-gray-900 dark:text-white">
-            @Comment.Username
+<div class="comment-item">
+    <div class="comment-header">
+        <span class="comment-user">@@@Comment.Username</span>
+        <span class="comment-time">@Comment.CreatedAt.ToLocalTime().ToShortDateString()</span>
+    </div>
+
+    @if (isEditing)
+    {
+        <div style="margin-top: 10px;">
+            <textarea @bind="editContent"
+                      style="width: 100%; padding: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; resize: vertical; min-height: 60px;"
+                      rows="3"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button @onclick="HandleSaveEdit"                        class="submit-btn" style="padding: 8px 16px; font-size: 14px;">
+                    Save
+                </button>
+                <button @onclick="HandleCancelEdit"                        class="cancel-btn" style="padding: 8px 16px; font-size: 14px;">
+                    Cancel
+                </button>
+            </div>
         </div>
-    </div>
-    
-    <div class="ml-11">
-        @if (isEditing)
+    }
+    else
+    {
+        <div class="comment-content">@Comment.Content</div>
+        @if (isAuthor)
         {
-            <div class="flex flex-col gap-2">
-                <textarea @bind="editContent"
-                          class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md p-2 text-sm text-gray-900 dark:text-white resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows="3">
-                </textarea>
-                <div class="flex justify-end gap-2">
-                    <button @onclick="HandleSaveEdit"
-                            class="bg-blue-600 text-white rounded-md px-3 py-1 text-xs hover:bg-blue-700 transition-colors">
-                        Save
-                    </button>
-                    <button @onclick="HandleCancelEdit"
-                            class="bg-gray-200 text-gray-800 rounded-md px-3 py-1 text-xs hover:bg-gray-300 transition-colors">
-                        Cancel
-                    </button>
-                </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button @onclick="HandleEditClick"                        class="action-btn edit-btn" style="font-size: 12px;">
+                    ✏️ Edit
+                </button>
+                <button @onclick="HandleDeleteClick"                        class="action-btn delete-btn" style="font-size: 12px;">
+                    🗑️ Delete
+                </button>
             </div>
         }
-        else
-        {
-            <div class="flex justify-between items-start">
-                <p class="text-sm text-gray-900 dark:text-white leading-relaxed break-words flex-1">
-                    @Comment.Content
-                </p>
-                @if (isAuthor)
-                {
-                    <div class="flex gap-2 ml-2">
-                        <button @onclick="HandleEditClick"
-                                class="text-xs text-blue-600 hover:underline">
-                            Edit
-                        </button>
-                        <button @onclick="HandleDeleteClick"
-                                class="text-xs text-gray-500 hover:underline">
-                            Delete
-                        </button>
-                    </div>
-                }
-            </div>
-        }
-    </div>
+    }
 </div>
 
 @code {

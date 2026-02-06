@@ -1,0 +1,87 @@
+@inject AuthService AuthService
+@inject ApiService ApiService
+@inject NavigationManager Navigation
+
+<div class="sidebar">
+    @if (AuthService.AuthState.IsAuthenticated && AuthService.AuthState.User != null)
+    {
+        <div class="user-profile">
+            <div class="avatar">
+                @AuthService.AuthState.User.Username.ToUpper().FirstOrDefault()
+            </div>
+            <div class="user-info">
+                <h3>Hi, There!</h3>
+                <p>@@@AuthService.AuthState.User.Username</p>
+            </div>
+        </div>
+    }
+
+    <div class="sidebar-menu">
+        <NavLink href="/" class="menu-item" Match="NavLinkMatch.All">
+            <span class="icon">🏠</span>
+            <span>Home</span>
+        </NavLink>
+        
+        <NavLink href="/search" class="menu-item">
+            <span class="icon">🔍</span>
+            <span>Search</span>
+        </NavLink>
+
+        <NavLink href="/profile" class="menu-item">
+            <span class="icon">👤</span>
+            <span>Profile</span>
+        </NavLink>
+
+        <button class="menu-item create-post-btn" @onclick="HandleCreatePost">
+            <span class="icon">✏️</span>
+            <span>Create Post</span>
+        </button>
+    </div>
+
+    @if (recentPosts != null && recentPosts.Any())
+    {
+        <div class="posts-preview">
+            <h3>Recent Posts</h3>
+            <div class="posts-list">
+                @foreach (var post in recentPosts.Take(5))
+                {
+                    <div class="post-preview @(SelectedPostId == post.Id ? "active" : "")" 
+                         @onclick="() => HandleSelectPost(post)">
+                        <div class="post-preview-header">
+                            <span class="username">@@@post.Username</span>
+                            <span class="time">@post.CreatedAt.ToLocalTime().ToShortDateString()</span>
+                        </div>
+                        <p class="preview-content">
+                            @(post.Content.Length > 50 
+                                ? $"{post.Content.Substring(0, 50)}..." 
+                                : post.Content)
+                        </p>
+                        <div class="post-stats">
+                            <span>❤️ @post.LikesCount</span>
+                            <span>💬 @post.CommentsCount</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<Post>? RecentPosts { get; set; }
+    [Parameter] public string? SelectedPostId { get; set; }
+    [Parameter] public EventCallback OnCreatePost { get; set; }
+    [Parameter] public EventCallback<Post> OnSelectPost { get; set; }
+
+    private List<Post>? recentPosts => RecentPosts;
+
+    private async Task HandleCreatePost()
+    {
+        await OnCreatePost.InvokeAsync();
+    }
+
+    private async Task HandleSelectPost(Post post)
+    {
+        await OnSelectPost.InvokeAsync(post);
+    }
+}

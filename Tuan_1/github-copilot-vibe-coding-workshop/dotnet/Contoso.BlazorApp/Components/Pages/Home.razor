@@ -2,47 +2,168 @@
 @rendermode InteractiveServer
 @inject AuthService AuthService
 @inject ApiService ApiService
+@inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
-<PageTitle>Contoso Outdoor Social</PageTitle>
+<PageTitle>SocialMedia - Home</PageTitle>
 
-<div class="w-full max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6 text-gray-900">Contoso Outdoor Social</h1>
+@if (showNameModal)
+{
+    <NameInputModal IsOpen="true" OnClose="HandleNameModalClose" />
+}
+else
+{
+    <Sidebar RecentPosts="posts" 
+             SelectedPostId="@selectedPost?.Id"
+             OnCreatePost="HandleOpenPostModal"
+             OnSelectPost="HandleSelectPost" />
     
-    @if (isLoading)
-    {
-        <div class="text-center py-10 text-gray-500">Loading posts...</div>
-    }
-    else if (!string.IsNullOrEmpty(error))
-    {
-        <div class="text-center py-10 text-red-500">@error</div>
-    }
-    else if (posts.Count == 0)
-    {
-        <div class="text-center py-10 text-gray-400">No posts yet.</div>
-    }
-    else
-    {
-        <div class="flex flex-col gap-4">
-            @foreach (var post in posts)
-            {
-                <PostCard Post="post" OnPostDeleted="HandlePostDeleted" OnPostUpdated="HandlePostUpdated" />
-            }
-        </div>
-    }
+    <div class="main-area">
+        @if (selectedPost != null)
+        {
+            <div class="post-details">
+                <div class="details-header">
+                    <button class="back-btn" @onclick="HandleBack">
+                        ← Back to Home
+                    </button>
+                    
+                    @if (selectedPost.Username == AuthService.AuthState.User?.Username)
+                    {
+                        <div class="post-actions">
+                            <button class="action-btn edit-btn" @onclick="HandleEditPost">
+                                ✏️ Edit
+                            </button>
+                            <button class="action-btn delete-btn" @onclick="HandleDeletePost">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <div class="post-content">
+                    <div class="post-header">
+                        <div class="user-avatar">
+                            @selectedPost.Username.ToUpper().FirstOrDefault()
+                        </div>
+                        <div class="user-info">
+                            <h3>@@@selectedPost.Username</h3>
+                            <span class="post-time">@selectedPost.CreatedAt.ToLocalTime().ToString("g")</span>
+                        </div>
+                    </div>
+
+                    <div class="post-text">
+                        <p>@selectedPost.Content</p>
+                    </div>
+
+                    <div class="post-stats">
+                        <button class="like-btn @(selectedPostLiked ? "liked" : "")" @onclick="HandleLikeToggle">
+                            @(selectedPostLiked ? "❤️ Liked" : "🤍 Like") (@selectedPostLikesCount)
+                        </button>
+                        <span class="comments-count">
+                            💬 @selectedPostComments.Count comments
+                        </span>
+                    </div>
+                </div>
+
+                <div class="comments-section">
+                    <h3>Comments (@selectedPostComments.Count)</h3>
+
+                    <div class="add-comment">
+                        <CommentInput PostId="@selectedPost.Id" OnCommentAdded="HandleCommentAdded" />
+                    </div>
+
+                    <div class="comments-list">
+                        @if (selectedPostComments.Any())
+                        {
+                            @foreach (var comment in selectedPostComments)
+                            {
+                                <div class="comment-item">
+                                    <div class="comment-header">
+                                        <span class="comment-user">@@@comment.Username</span>
+                                        <span class="comment-time">@comment.CreatedAt.ToLocalTime().ToShortDateString()</span>
+                                    </div>
+                                    <div class="comment-content">@comment.Content</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-comments">
+                                <p>No comments yet. Be the first to comment!</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="home">
+                <div class="home-header">
+                    <h2>Home Feed</h2>
+                    <p class="subtitle">Latest posts from everyone</p>
+                </div>
+                
+                @if (isLoading)
+                {
+                    <div class="empty-feed">Loading posts...</div>
+                }
+                else if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="empty-feed" style="color: #ff4757;">@error</div>
+                }
+                else if (posts.Count == 0)
+                {
+                    <div class="empty-feed">
+                        <p>No posts yet. Be the first to create one!</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="posts-feed">
+                        @foreach (var post in filteredPosts)
+                        {
+                            <PostCard Post="post" 
+                                      OnPostClick="() => HandleSelectPost(post)"
+                                      OnLike="() => HandleLikePost(post.Id)"
+                                      OnUnlike="() => HandleUnlikePost(post.Id)"
+                                      OnEdit="() => HandleEditPostItem(post)"
+                                      OnDelete="() => HandleDeletePostItem(post.Id)" />
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
     
     <FloatingActionButton OnClick="HandleOpenPostModal" />
-    <PostingModal IsOpen="isPostModalOpen" OnClose="HandleClosePostModal" OnPostCreated="HandlePostCreated" />
-    <NameInputModal IsOpen="isNameModalOpen" OnClose="HandleNameModalClose" />
-</div>
+    <PostingModal IsOpen="isPostModalOpen" 
+                  EditPost="editingPost"
+                  OnClose="HandleClosePostModal" 
+                  OnPostCreated="HandlePostCreated"
+                  OnPostUpdated="HandlePostUpdated" />
+}
 
 @code {
     private List<Post> posts = new();
+    private Post? selectedPost;
+    private List<Comment> selectedPostComments = new();
+    private bool selectedPostLiked;
+    private int selectedPostLikesCount;
     private bool isLoading = true;
     private string error = "";
     private bool isPostModalOpen = false;
-    private bool isNameModalOpen = false;
+    private bool showNameModal = false;
+    private Post? editingPost;
+    private string searchQuery = "";
+
+    private List<Post> filteredPosts => string.IsNullOrWhiteSpace(searchQuery) 
+        ? posts 
+        : posts.Where(p => 
+            p.Content.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+            p.Username.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
     protected override void OnInitialized()
     {
@@ -57,7 +178,7 @@
             
             if (!AuthService.AuthState.IsLoading && !AuthService.AuthState.IsAuthenticated)
             {
-                isNameModalOpen = true;
+                showNameModal = true;
             }
             else if (AuthService.AuthState.IsAuthenticated)
             {
@@ -74,10 +195,11 @@
         {
             if (!AuthService.AuthState.IsLoading && !AuthService.AuthState.IsAuthenticated)
             {
-                isNameModalOpen = true;
+                showNameModal = true;
             }
             else if (AuthService.AuthState.IsAuthenticated)
             {
+                showNameModal = false;
                 await FetchPosts();
             }
             StateHasChanged();
@@ -106,8 +228,44 @@
         }
     }
 
-    private void HandleOpenPostModal() => isPostModalOpen = true;
-    private void HandleClosePostModal() => isPostModalOpen = false;
+    private async Task HandleSelectPost(Post post)
+    {
+        try
+        {
+            selectedPost = await ApiService.GetPostAsync(post.Id);
+            selectedPostComments = await ApiService.GetCommentsAsync(post.Id);
+            selectedPostLiked = selectedPost.IsLiked;
+            selectedPostLikesCount = selectedPost.LikesCount;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching post details: {ex.Message}");
+            selectedPost = post;
+            selectedPostComments = new();
+            selectedPostLiked = post.IsLiked;
+            selectedPostLikesCount = post.LikesCount;
+        }
+    }
+
+    private void HandleBack()
+    {
+        selectedPost = null;
+        selectedPostComments = new();
+        StateHasChanged();
+    }
+
+    private void HandleOpenPostModal()
+    {
+        editingPost = null;
+        isPostModalOpen = true;
+    }
+    
+    private void HandleClosePostModal()
+    {
+        isPostModalOpen = false;
+        editingPost = null;
+    }
 
     private async Task HandlePostCreated()
     {
@@ -115,19 +273,133 @@
         isPostModalOpen = false;
     }
 
-    private async Task HandlePostDeleted()
-    {
-        await FetchPosts();
-    }
-
     private async Task HandlePostUpdated()
     {
         await FetchPosts();
+        isPostModalOpen = false;
+        editingPost = null;
+        if (selectedPost != null)
+        {
+            await HandleSelectPost(selectedPost);
+        }
+    }
+
+    private async Task HandleLikeToggle()
+    {
+        if (selectedPost == null || AuthService.AuthState.User == null) return;
+
+        try
+        {
+            if (selectedPostLiked)
+            {
+                await ApiService.UnlikePostAsync(selectedPost.Id, AuthService.AuthState.User.Username);
+                selectedPostLikesCount = Math.Max(0, selectedPostLikesCount - 1);
+                selectedPostLiked = false;
+            }
+            else
+            {
+                var result = await ApiService.LikePostAsync(selectedPost.Id, AuthService.AuthState.User.Username);
+                selectedPostLikesCount = result.LikesCount;
+                selectedPostLiked = true;
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling like: {ex.Message}");
+        }
+    }
+
+    private async Task HandleLikePost(string postId)
+    {
+        if (AuthService.AuthState.User == null) return;
+        try
+        {
+            await ApiService.LikePostAsync(postId, AuthService.AuthState.User.Username);
+            await FetchPosts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error liking post: {ex.Message}");
+        }
+    }
+
+    private async Task HandleUnlikePost(string postId)
+    {
+        if (AuthService.AuthState.User == null) return;
+        try
+        {
+            await ApiService.UnlikePostAsync(postId, AuthService.AuthState.User.Username);
+            await FetchPosts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error unliking post: {ex.Message}");
+        }
+    }
+
+    private void HandleEditPost()
+    {
+        if (selectedPost != null)
+        {
+            editingPost = selectedPost;
+            isPostModalOpen = true;
+        }
+    }
+
+    private void HandleEditPostItem(Post post)
+    {
+        editingPost = post;
+        isPostModalOpen = true;
+    }
+
+    private async Task HandleDeletePost()
+    {
+        if (selectedPost == null) return;
+        
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this post?");
+        if (!confirmed) return;
+
+        try
+        {
+            await ApiService.DeletePostAsync(selectedPost.Id);
+            selectedPost = null;
+            await FetchPosts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting post: {ex.Message}");
+        }
+    }
+
+    private async Task HandleDeletePostItem(string postId)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this post?");
+        if (!confirmed) return;
+
+        try
+        {
+            await ApiService.DeletePostAsync(postId);
+            await FetchPosts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting post: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCommentAdded()
+    {
+        if (selectedPost != null)
+        {
+            selectedPostComments = await ApiService.GetCommentsAsync(selectedPost.Id);
+            StateHasChanged();
+        }
     }
 
     private void HandleNameModalClose()
     {
-        isNameModalOpen = false;
+        showNameModal = false;
     }
 
     public void Dispose()

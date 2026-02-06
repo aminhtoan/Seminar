@@ -2,38 +2,58 @@
 @inject ApiService ApiService
 @inject AuthService AuthService
 
-<div class="post-card" @onclick="HandlePostClick">
-    <div class="flex items-center mb-2">
-        <div class="w-10 h-10 rounded-full bg-gray-200 mr-2"></div>
-        <div class="text-base font-bold text-gray-900">@Post.Username</div>
+<div class="post-item" @onclick="HandlePostClick">
+    <div class="post-item-header">
+        <div class="user-avatar-small">
+            @Post.Username.ToUpper().FirstOrDefault()
+        </div>
+        <div class="post-user-info">
+            <h4>@@@Post.Username</h4>
+            <span class="post-time">
+                @Post.CreatedAt.ToLocalTime().ToString("g")
+            </span>
+        </div>
     </div>
-    <div class="mb-2">
-        <p class="text-base text-gray-900 leading-relaxed break-words">@Post.Content</p>
+    
+    <div class="post-content">
+        @Post.Content
     </div>
-    <div class="flex gap-6 mt-2">
-        <button @onclick="HandleLikeToggle" @onclick:stopPropagation="true"
-                class="flex items-center gap-1 @(isLiked ? "text-red-500" : "text-gray-500 hover-text-red-500")"
-                aria-label="Like">
-            <HeartIcon Filled="@isLiked" />
-            @if (likesCount > 0)
-            {
-                <span class="text-xs">@likesCount</span>
-            }
+    
+    <div class="post-stats">
+        <span>❤️ @likesCount likes</span>
+        <span>💬 @Post.CommentsCount comments</span>
+    </div>
+    
+    <div class="post-actions">
+        <button class="action-btn like-btn @(isLiked ? "liked" : "")"
+                @onclick="HandleLikeToggle" 
+                @onclick:stopPropagation="true">
+            @(isLiked ? "❤️ Liked" : "🤍 Like")
         </button>
-        <button @onclick="HandleCommentClick" @onclick:stopPropagation="true"
-                class="flex items-center gap-1 text-gray-500 hover-text-red-500"
-                aria-label="Comment">
-            <CommentIcon />
-            @if (Post.CommentsCount > 0)
-            {
-                <span class="text-xs">@Post.CommentsCount</span>
-            }
-        </button>
+        
+        @if (Post.Username == AuthService.AuthState.User?.Username)
+        {
+            <button class="action-btn edit-btn"
+                    @onclick="HandleEdit"
+                    @onclick:stopPropagation="true">
+                ✏️ Edit
+            </button>
+            <button class="action-btn delete-btn"
+                    @onclick="HandleDelete"
+                    @onclick:stopPropagation="true">
+                🗑️ Delete
+            </button>
+        }
     </div>
 </div>
 
 @code {
     [Parameter] public Post Post { get; set; } = new();
+    [Parameter] public EventCallback OnPostClick { get; set; }
+    [Parameter] public EventCallback OnLike { get; set; }
+    [Parameter] public EventCallback OnUnlike { get; set; }
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public EventCallback OnPostDeleted { get; set; }
     [Parameter] public EventCallback OnPostUpdated { get; set; }
 
@@ -46,9 +66,22 @@
         likesCount = Post.LikesCount;
     }
 
-    private void HandlePostClick()
+    protected override void OnParametersSet()
     {
-        Navigation.NavigateTo($"/post/{Post.Id}");
+        isLiked = Post.IsLiked;
+        likesCount = Post.LikesCount;
+    }
+
+    private async Task HandlePostClick()
+    {
+        if (OnPostClick.HasDelegate)
+        {
+            await OnPostClick.InvokeAsync();
+        }
+        else
+        {
+            Navigation.NavigateTo($"/post/{Post.Id}");
+        }
     }
 
     private async Task HandleLikeToggle()
@@ -60,14 +93,14 @@
 
             if (isLiked)
             {
-                await ApiService.UnlikePostAsync(Post.Id, user.Username);
-                likesCount--;
+                await OnUnlike.InvokeAsync();
+                likesCount = Math.Max(0, likesCount - 1);
                 isLiked = false;
             }
             else
             {
-                var result = await ApiService.LikePostAsync(Post.Id, user.Username);
-                likesCount = result.LikesCount;
+                await OnLike.InvokeAsync();
+                likesCount++;
                 isLiked = true;
             }
             StateHasChanged();
@@ -78,8 +111,13 @@
         }
     }
 
-    private void HandleCommentClick()
+    private async Task HandleEdit()
     {
-        Navigation.NavigateTo($"/post/{Post.Id}");
+        await OnEdit.InvokeAsync();
+    }
+
+    private async Task HandleDelete()
+    {
+        await OnDelete.InvokeAsync();
     }
 }

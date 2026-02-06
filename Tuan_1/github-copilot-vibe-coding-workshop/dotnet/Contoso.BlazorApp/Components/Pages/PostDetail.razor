@@ -1,61 +1,93 @@
 @page "/post/{PostId}"
 @rendermode InteractiveServer
+@using Contoso.BlazorApp.Models
+@using Contoso.BlazorApp.Services
 @inject AuthService AuthService
 @inject ApiService ApiService
 @inject NavigationManager Navigation
 
-<PageTitle>Post Details - Contoso Outdoor Social</PageTitle>
+<PageTitle>Post Details - SocialMedia</PageTitle>
 
-<div class="w-full max-w-2xl mx-auto">
-    @if (isLoading)
-    {
-        <div class="text-center py-10 text-gray-500">Loading post...</div>
-    }
-    else if (!string.IsNullOrEmpty(error))
-    {
-        <div class="text-center py-10 text-red-500">@error</div>
-    }
-    else if (post != null)
-    {
-        <div class="bg-white border-b border-gray-200 p-4 mb-4">
-            <div class="flex items-center mb-2">
-                <div class="w-10 h-10 rounded-full bg-gray-200 mr-2"></div>
-                <div class="text-base font-bold text-gray-900">@post.Username</div>
-            </div>
-            <div class="mb-4">
-                <p class="text-base text-gray-900 leading-relaxed break-words">@post.Content</p>
-            </div>
-            <div class="flex gap-6">
-                <button @onclick="HandleLikeToggle"
-                        class="flex items-center gap-1 @(isLiked ? "text-red-500" : "text-gray-500 hover-text-red-500")"
-                        aria-label="Like">
-                    <HeartIcon Filled="@isLiked" />
-                    @if (likesCount > 0)
-                    {
-                        <span class="text-xs">@likesCount</span>
-                    }
-                </button>
-                <div class="flex items-center gap-1 text-gray-500">
-                    <CommentIcon />
-                    @if (comments.Count > 0)
-                    {
-                        <span class="text-xs">@comments.Count</span>
-                    }
+<Sidebar />
+
+<div class="main-area">
+    <div class="posts-container">
+        <button class="back-button" @onclick="GoBack">
+            ← Back to Feed
+        </button>
+
+        @if (isLoading)
+        {
+            <div class="empty-feed">Loading post...</div>
+        }
+        else if (!string.IsNullOrEmpty(error))
+        {
+            <div style="color: #ff4757; text-align: center; padding: 40px;">@error</div>
+        }
+        else if (post != null)
+        {
+            <div class="post-detail-card">
+                <div class="post-header">
+                    <div class="post-avatar">
+                        @post.Username.ToUpper().FirstOrDefault()
+                    </div>
+                    <span class="post-username" @onclick="@(() => Navigation.NavigateTo($"/profile/{post.Username}"))">
+                        @@@post.Username
+                    </span>
+                </div>
+
+                <div class="post-content">
+                    @post.Content
+                </div>
+
+                <div class="post-actions">
+                    <button class="like-button @(isLiked ? "liked" : "")" @onclick="HandleLikeToggle">
+                        @if (isLiked)
+                        {
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff4757" stroke="none">
+                                <path                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                        }
+                        <span>@likesCount</span>
+                    </button>
+
+                    <div class="comment-count">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                        <span>@comments.Count</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="mb-4">
-            <CommentInput OnCommentAdded="HandleCommentAdded" PostId="@PostId" />
-        </div>
+            <div class="comments-section">
+                <h3 style="color: #333; margin-bottom: 20px;">Comments</h3>
 
-        <div class="space-y-4">
-            @foreach (var comment in comments)
-            {
-                <CommentItem Comment="comment" PostId="@PostId" OnCommentDelete="HandleCommentDelete" OnCommentUpdate="HandleCommentUpdate" />
-            }
-        </div>
-    }
+                <CommentInput OnCommentAdded="HandleCommentAdded" PostId="@PostId" />
+
+                @if (comments.Any())
+                {
+                    <div class="comment-list">
+                        @foreach (var comment in comments)
+                        {
+                            <CommentItem Comment="comment" PostId="@PostId" OnCommentDelete="HandleCommentDelete"
+                                         OnCommentUpdate="HandleCommentUpdate" />
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-feed">No comments yet. Be the first to comment!</div>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 @code {
@@ -73,6 +105,11 @@
         await LoadPostAndComments();
     }
 
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
     private async Task LoadPostAndComments()
     {
         try
@@ -82,7 +119,7 @@
 
             post = await ApiService.GetPostAsync(PostId);
             comments = await ApiService.GetCommentsAsync(PostId);
-            
+
             isLiked = post.IsLiked;
             likesCount = post.LikesCount;
         }

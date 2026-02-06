@@ -1,0 +1,28 @@
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<header class="header">
+    <div class="header-container">
+        <div class="logo">
+            <h1>📱 SocialMedia</h1>
+        </div>
+        
+        <div class="header-actions">
+            @if (AuthService.AuthState.IsAuthenticated && AuthService.AuthState.User != null)
+            {
+                <span class="welcome-text">Welcome, @@@AuthService.AuthState.User.Username!</span>
+                <button class="logout-btn" @onclick="HandleLogout">
+                    Logout
+                </button>
+            }
+        </div>
+    </div>
+</header>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}
