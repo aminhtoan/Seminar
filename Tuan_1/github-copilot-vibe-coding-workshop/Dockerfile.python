@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY python/ .
 
 # Chạy app (đổi nếu bạn chạy file khác)
-CMD ["python", "main.py"]
+CMD ["python", "main.py"]S

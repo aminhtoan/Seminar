@@ -14,19 +14,40 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "sns_api.db")
 # Kiểm tra cả hai đường dẫn (local dev và Docker)
 OPENAPI_PATH_DOCKER = os.path.join(os.path.dirname(__file__), "openapi.yaml")
 OPENAPI_PATH_LOCAL = os.path.join(os.path.dirname(__file__), "..", "openapi.yaml")
-OPENAPI_PATH = OPENAPI_PATH_DOCKER if os.path.exists(OPENAPI_PATH_DOCKER) else OPENAPI_PATH_LOCAL
 
-# Load OpenAPI YAML
-with open(OPENAPI_PATH, "r", encoding="utf-8") as f:
-    openapi_yaml = yaml.safe_load(f)
+# Load OpenAPI YAML - try local first, then parent directory
+openapi_yaml = None
+OPENAPI_PATH = None
+
+if os.path.exists(OPENAPI_PATH_DOCKER):
+    with open(OPENAPI_PATH_DOCKER, "r", encoding="utf-8") as f:
+        openapi_yaml = yaml.safe_load(f)
+    if openapi_yaml:
+        OPENAPI_PATH = OPENAPI_PATH_DOCKER
+
+if not openapi_yaml and os.path.exists(OPENAPI_PATH_LOCAL):
+    with open(OPENAPI_PATH_LOCAL, "r", encoding="utf-8") as f:
+        openapi_yaml = yaml.safe_load(f)
+    if openapi_yaml:
+        OPENAPI_PATH = OPENAPI_PATH_LOCAL
+
+# Use default values if no valid OpenAPI YAML found
+if not openapi_yaml:
+    openapi_yaml = {
+        "info": {
+            "title": "Simple Social Media API",
+            "description": "A basic Social Networking Service (SNS) API",
+            "version": "1.0.0"
+        }
+    }
 
 app = FastAPI(
     title=openapi_yaml["info"]["title"],
     description=openapi_yaml["info"].get("description", ""),
     version=openapi_yaml["info"].get("version", "1.0.0"),
     docs_url="/docs",
-    redoc_url=None,
-    openapi_url=None,  # We'll serve our own OpenAPI YAML
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
 # Allow CORS from everywhere
@@ -82,7 +103,11 @@ async def init_db():
 # --- Serve OpenAPI YAML at /openapi.yaml ---
 @app.get("/openapi.yaml", include_in_schema=False)
 async def serve_openapi_yaml():
-    return FileResponse(OPENAPI_PATH, media_type="application/yaml")
+    if OPENAPI_PATH and os.path.exists(OPENAPI_PATH):
+        return FileResponse(OPENAPI_PATH, media_type="application/yaml")
+    else:
+        # Return empty YAML if file not found
+        return Response(content="openapi: 3.0.0", media_type="application/yaml")
 
 # --- Serve Swagger UI at /docs (default FastAPI) ---
 # Already handled by FastAPI's docs_url
