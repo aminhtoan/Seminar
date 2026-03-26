@@ -1,0 +1,129 @@
+.chatCard {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(133, 153, 180, 0.25);
+  border-radius: 18px;
+  background: rgba(10, 19, 34, 0.55);
+  padding: clamp(1rem, 2.4vw, 1.4rem);
+}
+
+.starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.starters button {
+  border: 1px solid rgba(133, 153, 180, 0.35);
+  background: rgba(6, 12, 23, 0.72);
+  color: var(--text-main);
+  border-radius: 999px;
+  padding: 0.45rem 0.78rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.starters button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(255, 96, 50, 0.65);
+}
+
+.starters button:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+}
+
+.messages {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.assistantMessage,
+.userMessage {
+  border-radius: 14px;
+  padding: 0.7rem 0.85rem;
+  line-height: 1.58;
+}
+
+.assistantMessage {
+  border: 1px solid rgba(141, 185, 255, 0.36);
+  background: rgba(13, 28, 48, 0.72);
+}
+
+.userMessage {
+  border: 1px solid rgba(255, 96, 50, 0.42);
+  background: rgba(52, 24, 18, 0.72);
+}
+
+.status {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.composer {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.label {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.inputRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.inputRow input {
+  flex: 1;
+  min-width: 260px;
+  border: 1px solid rgba(133, 153, 180, 0.32);
+  border-radius: 12px;
+  background: rgba(6, 12, 23, 0.82);
+  color: var(--text-main);
+  padding: 0.72rem 0.78rem;
+}
+
+.inputRow input::placeholder {
+  color: var(--text-muted);
+}
+
+.inputRow button {
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent-strong);
+  color: #f5f8ff;
+  font-weight: 600;
+  padding: 0.72rem 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputRow button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(255, 96, 50, 0.27);
+}
+
+.inputRow button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #ffb0a0;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 700px) {
+  .inputRow input {
+    min-width: 100%;
+  }
+}

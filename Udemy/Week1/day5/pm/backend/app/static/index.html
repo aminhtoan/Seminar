@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PM MVP Hello</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        margin: 40px auto;
+        max-width: 680px;
+        line-height: 1.5;
+        color: #032147;
+        padding: 0 16px;
+      }
+
+      code {
+        background: #f5f6f8;
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+
+      .panel {
+        border: 1px solid #dce2ea;
+        border-radius: 12px;
+        padding: 16px;
+        background: #fafbfc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PM MVP Hello World</h1>
+    <p>FastAPI is running locally in Docker.</p>
+
+    <div class="panel">
+      <p><strong>API call:</strong> <code>GET /api/hello</code></p>
+      <p id="result">Loading...</p>
+    </div>
+
+    <script>
+      (async () => {
+        const result = document.getElementById("result");
+        try {
+          const response = await fetch("/api/hello");
+          const payload = await response.json();
+          result.textContent = `status=${payload.status}, message=${payload.message}`;
+        } catch {
+          result.textContent = "Unable to reach /api/hello";
+        }
+      })();
+    </script>
+  </body>
+  </html>
