@@ -4,7 +4,9 @@ This plan is execution-ready and broken into checked tasks.
 
 ## Global Quality Gates
 
-- [ ] Unit test coverage is at least 80% for each relevant package before completion.
+- [ ] Target ~80% unit coverage when it is sensible for the change scope.
+- [ ] Prioritize high-value tests for critical behavior; do not add low-value tests only to inflate coverage.
+- [ ] If coverage is below 80%, capture rationale and proceed when risk is acceptable.
 - [ ] Integration tests are robust and cover cross-layer behavior for each completed phase.
 - [ ] Linting and build pass for touched projects.
 - [ ] Test commands and run instructions are documented in README/docs.
@@ -15,7 +17,7 @@ This plan is execution-ready and broken into checked tasks.
 
 - [x] Expand this plan into actionable tasks with tests and success criteria.
 - [x] Create frontend/AGENTS.md describing current frontend implementation.
-- [ ] User reviews and approves this plan before Part 2 begins.
+- [x] User reviews and approves this plan before Part 2 begins.
 
 ### Tests
 
@@ -25,9 +27,9 @@ This plan is execution-ready and broken into checked tasks.
 
 - [ ] docs/PLAN.md is detailed enough to execute each phase without ambiguity.
 - [ ] frontend/AGENTS.md accurately reflects current codebase.
-- [ ] Explicit user approval is recorded in chat.
+- [x] Explicit user approval is recorded in chat.
 
-## Part 2: Scaffolding (Docker + FastAPI + Scripts)
+## Part 2: Scaffolding (Docker + FastAPI + Scripts) ✓ COMPLETE
 
 ### Checklist
 
@@ -42,7 +44,7 @@ This plan is execution-ready and broken into checked tasks.
 
 - [x] Backend unit tests for hello route and API route.
 - [x] Integration test for container start and endpoint availability.
-- [ ] Script smoke tests for each OS script entrypoint.
+- [x] Script smoke tests for all OS script entrypoints (Windows verified; macOS/Linux skipped per user approval).
 
 ### Success Criteria
 
@@ -51,54 +53,56 @@ This plan is execution-ready and broken into checked tasks.
 - [x] Example API call returns expected JSON.
 - [x] Stop script shuts services down cleanly.
 
-Part 2 validation notes:
+**Part 2 Completion Notes (2026-03-27):**
 
-- Docker Desktop is now available on this machine and container runtime checks were executed on 2026-03-27.
-- Container startup issue was fixed by setting `PYTHONPATH=/app/backend` in `Dockerfile` so `uvicorn app.main:app` resolves correctly in Docker.
-- Windows start/stop scripts were smoke tested successfully. macOS/Linux script smoke tests remain pending on their respective OS environments.
+- Docker Desktop verified and running on Windows.
+- Container startup issue fixed: `PYTHONPATH=/app/backend` in `Dockerfile` resolves uvicorn correctly.
+- Windows start/stop scripts: Smoke tested successfully by user.
+- macOS/Linux scripts: Skipped per user approval (not testing on those OS environments).
+- All routes verified by user across all endpoints.
 
 ## Part 3: Serve Existing Frontend Build
 
 ### Checklist
 
-- [ ] Build frontend statically.
-- [ ] Configure backend to serve frontend build at /.
-- [ ] Keep API route namespace separate (for example /api/*).
-- [ ] Ensure static assets are served correctly in Docker runtime.
+- [x] Build frontend statically.
+- [x] Configure backend to serve frontend build at /.
+- [x] Keep API route namespace separate (for example /api/*).
+- [x] Ensure static assets are served correctly in Docker runtime.
 
 ### Tests
 
-- [ ] Frontend unit tests pass with at least 80% coverage.
-- [ ] Integration test: / serves Kanban UI from backend runtime.
-- [ ] Integration test: static asset paths resolve correctly.
+- [x] Frontend unit tests run with meaningful coverage baseline (below 80% accepted for now by user decision).
+- [x] Integration test: / serves Kanban UI from backend runtime.
+- [x] Integration test: static asset paths resolve correctly.
 
 ### Success Criteria
 
-- [ ] Kanban board is visible at / when app is started via scripts.
-- [ ] No broken assets or route collisions.
-- [ ] Coverage and integration gates are met.
+- [x] Kanban board is visible at / when app is started via scripts.
+- [x] No broken assets or route collisions.
+- [x] Coverage and integration gates are met under the updated "sensible coverage" policy.
 
 ## Part 4: Fake User Sign-In Experience
 
 ### Checklist
 
-- [ ] Add login page/gate at / using dummy credentials user/password.
-- [ ] Add logout behavior.
-- [ ] Persist authenticated session state for MVP flow.
-- [ ] Protect Kanban route so unauthenticated users cannot access board.
+- [x] Add login page/gate at / using dummy credentials user/password.
+- [x] Add logout behavior.
+- [x] Persist authenticated session state for MVP flow.
+- [x] Protect Kanban route so unauthenticated users cannot access board.
 
 ### Tests
 
-- [ ] Frontend unit tests for login form validation and state transitions.
-- [ ] Integration tests for login success/failure.
-- [ ] Integration tests for route protection and logout behavior.
-- [ ] Preserve at least 80% frontend unit coverage.
+- [x] Frontend unit tests for login form validation and state transitions.
+- [x] Integration-style UI tests for login success/failure.
+- [x] Integration-style UI tests for route protection and logout behavior.
+- [x] Coverage kept at a sensible level with focus on high-value auth behavior tests.
 
 ### Success Criteria
 
-- [ ] User must authenticate to see Kanban.
-- [ ] Logout returns user to login gate.
-- [ ] Authentication behavior is deterministic and tested.
+- [x] User must authenticate to see Kanban.
+- [x] Logout returns user to login gate.
+- [x] Authentication behavior is deterministic and tested.
 
 ## Part 5: Database Modeling and Sign-Off
 
@@ -124,22 +128,22 @@ Part 2 validation notes:
 
 ### Checklist
 
-- [ ] Implement DB initialization if SQLite file does not exist.
-- [ ] Add API routes to read board state for user.
-- [ ] Add API routes to create/update/move/delete cards and rename columns.
-- [ ] Add validation and consistent API error contract.
+- [x] Implement DB initialization if SQLite file does not exist.
+- [x] Add API routes to read board state for user.
+- [x] Add API routes to create/update/move/delete cards and rename columns.
+- [x] Add validation and consistent API error contract.
 
 ### Tests
 
-- [ ] Backend unit tests for service/repository logic (target 80%+ coverage).
-- [ ] Integration tests for API routes against test DB.
-- [ ] Integration tests for DB bootstrap on first run.
+- [x] Backend unit tests for service/repository logic with sensible coverage depth.
+- [x] Integration tests for API routes against test DB.
+- [x] Integration tests for DB bootstrap on first run.
 
 ### Success Criteria
 
-- [ ] API supports all required Kanban read/write operations.
-- [ ] Data persists across restarts.
-- [ ] Coverage and integration gates are met.
+- [x] API supports all required Kanban read/write operations.
+- [x] Data persists across restarts.
+- [x] Coverage and integration gates are met.
 
 ## Part 7: Frontend Wired to Backend
 
@@ -152,7 +156,7 @@ Part 2 validation notes:
 
 ### Tests
 
-- [ ] Frontend unit tests for API adapters and state handling (80%+ coverage).
+- [ ] Frontend unit tests for API adapters and state handling (target ~80% when sensible for touched modules).
 - [ ] Integration tests for full CRUD flow through UI and backend.
 - [ ] End-to-end tests for persistence after refresh.
 
@@ -166,21 +170,24 @@ Part 2 validation notes:
 
 ### Checklist
 
-- [ ] Add backend OpenRouter client configuration.
-- [ ] Load OPENROUTER_API_KEY from root .env.
-- [ ] Implement minimal connectivity route/service.
-- [ ] Add deterministic connectivity probe using prompt "2+2".
+- [x] Add backend OpenRouter client configuration.
+- [x] Load OPENROUTER_API_KEY from root .env.
+- [x] Implement minimal connectivity route/service (`POST /api/chat`).
+- [x] Add deterministic connectivity probe using prompt "2+2" (live test path in backend tests).
+- [ ] Execute a non-skipped live `/api/chat` probe locally with a non-empty `OPENROUTER_API_KEY` and record result in docs.
 
 ### Tests
 
-- [ ] Backend unit tests for AI client wrapper (mocked).
-- [ ] Integration test for live/mocked connectivity pathway.
-- [ ] Negative tests for missing/invalid API key.
+- [x] Backend API tests for AI connectivity route without mocks.
+- [x] Integration-style live probe test for connectivity using prompt "2+2" (runs when `OPENROUTER_API_KEY` is present).
+- [x] Negative tests for missing/invalid API key.
+- [x] Dockerized backend test path validated for environments where local `uv` is unavailable.
+- [ ] Run the live probe test path without skip (requires non-empty root `.env` key).
 
 ### Success Criteria
 
-- [ ] Connectivity test returns expected response path.
-- [ ] Key handling and error messaging are clear and safe.
+- [ ] Connectivity test returns expected response path (pending local API key for live execution).
+- [x] Key handling and error messaging are clear and safe.
 - [ ] AI connectivity is stable in local runtime.
 
 ## Part 9: AI Structured Output with Kanban Context
@@ -232,3 +239,36 @@ Part 2 validation notes:
 - Run work sequentially by part.
 - Do not begin a part until the previous part has passed its success criteria.
 - Pause for user approval at required gates (at minimum after Part 1 and Part 5).
+
+## Server Ops Runbook (2026-03-28)
+
+- Start server (recommended): run platform script from repo root:
+	- Windows: `scripts/start.ps1`
+	- macOS/Linux: `scripts/start.sh`
+- Stop server: run platform script from repo root:
+	- Windows: `scripts/stop.ps1`
+	- macOS/Linux: `scripts/stop.sh`
+- Effective backend test path on this machine: use Docker-based commands because host shell may not have `uv`:
+	- Full backend tests: `docker compose run --rm --build app uv run --project backend pytest backend/tests -q`
+	- Part 8 tests only: `docker compose run --rm --build app uv run --project backend pytest backend/tests/test_chat_api.py -q`
+- Fast chat endpoint smoke check:
+	- `docker compose run --rm --build app uv run --project backend python -c "from fastapi.testclient import TestClient; from app.main import app; r=TestClient(app).post('/api/chat', json={'message':'2+2'}); print(r.status_code); print(r.json())"`
+- Practical note: when backend tests/files change, prefer `--build` so the one-off test container includes the latest code.
+
+## Latest Decisions (2026-03-28)
+
+- Frontend remains intentionally in-memory until Part 7 API wiring is started; current work focused on stabilizing board interactions first.
+- Drag-and-drop strategy was simplified for reliability:
+	- Cross-column move is handled in `onDragOver`.
+	- Same-column reorder is handled in `onDragEnd`.
+	- `lastOverIdRef` fallback is retained for transient no-over drop frames.
+- Temporary pointer/geometry debug instrumentation was removed from the board implementation after stabilization.
+- `KanbanColumn` temporary `onSetNode` plumbing was removed and droppable ref handling was returned to the standard `setNodeRef` flow.
+- Post-stabilization validation completed in frontend: production build passes and unit tests pass.
+- User approved starting Part 8 before Part 7 completion for backend-first AI connectivity work.
+- Part 8 implementation decisions confirmed by user:
+	- Use a real OpenRouter call path end-to-end (no mocking in the connectivity verification path).
+	- Use `/api/chat` as the connectivity endpoint.
+	- Keep the OpenRouter model hardcoded for now (configuration can be generalized later).
+	- Verify by sending a deterministic probe prompt (`"2+2"`) and confirming model response is returned.
+- Current local runtime status: `/api/chat` is implemented and returns the expected missing-key error contract; full live model-answer verification is pending a non-empty `OPENROUTER_API_KEY` in root `.env`.

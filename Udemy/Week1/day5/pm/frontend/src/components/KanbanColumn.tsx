@@ -1,6 +1,9 @@
 import clsx from "clsx";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Card, Column } from "@/lib/kanban";
 import { KanbanCard } from "@/components/KanbanCard";
 import { NewCardForm } from "@/components/NewCardForm";
@@ -27,7 +30,7 @@ export const KanbanColumn = ({
       ref={setNodeRef}
       className={clsx(
         "flex min-h-[520px] flex-col rounded-3xl border border-[var(--stroke)] bg-[var(--surface-strong)] p-4 shadow-[var(--shadow)] transition",
-        isOver && "ring-2 ring-[var(--accent-yellow)]"
+        isOver && "ring-2 ring-[var(--accent-yellow)]",
       )}
       data-testid={`column-${column.id}`}
     >
@@ -48,7 +51,10 @@ export const KanbanColumn = ({
         </div>
       </div>
       <div className="mt-4 flex flex-1 flex-col gap-3">
-        <SortableContext items={column.cardIds} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={column.cardIds}
+          strategy={verticalListSortingStrategy}
+        >
           {cards.map((card) => (
             <KanbanCard
               key={card.id}

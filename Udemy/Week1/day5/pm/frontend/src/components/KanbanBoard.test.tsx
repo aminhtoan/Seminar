@@ -8,6 +8,7 @@ describe("KanbanBoard", () => {
   it("renders five columns", () => {
     render(<KanbanBoard />);
     expect(screen.getAllByTestId(/column-/i)).toHaveLength(5);
+    expect(screen.getByTestId("ai-chat-panel")).toBeInTheDocument();
   });
 
   it("renames a column", async () => {

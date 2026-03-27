@@ -1,55 +1,118 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import {
   DndContext,
-  DragOverlay,
   PointerSensor,
+  closestCorners,
   useSensor,
   useSensors,
-  closestCorners,
   type DragEndEvent,
-  type DragStartEvent,
+  type DragOverEvent,
 } from "@dnd-kit/core";
+import { AIAssistantPanel } from "@/components/AIAssistantPanel";
 import { KanbanColumn } from "@/components/KanbanColumn";
-import { KanbanCardPreview } from "@/components/KanbanCardPreview";
 import { createId, initialData, moveCard, type BoardData } from "@/lib/kanban";
 
-export const KanbanBoard = () => {
+type KanbanBoardProps = {
+  onLogout?: () => void;
+};
+
+export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
   const [board, setBoard] = useState<BoardData>(() => initialData);
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const lastOverIdRef = useRef<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
-    })
+    }),
   );
 
-  const cardsById = useMemo(() => board.cards, [board.cards]);
+  const findColumnId = (columns: BoardData["columns"], id: string) => {
+    return columns.find(
+      (column) => column.id === id || column.cardIds.includes(id),
+    )?.id;
+  };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveCardId(event.active.id as string);
+  const handleDragStart = () => {
+    lastOverIdRef.current = null;
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (event.over) {
+      lastOverIdRef.current = String(event.over.id);
+    }
+
+    const { active, over } = event;
+    if (!over) {
+      return;
+    }
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    setBoard((prev) => {
+      const activeColumnId = findColumnId(prev.columns, activeId);
+      const overColumnId = findColumnId(prev.columns, overId);
+
+      if (!activeColumnId || !overColumnId || activeColumnId === overColumnId) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        columns: moveCard(prev.columns, activeId, overId),
+      };
+    });
+  };
+
+  const handleDragCancel = () => {
+    lastOverIdRef.current = null;
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveCardId(null);
+    const activeId = String(active.id);
+    let overId = over ? String(over.id) : lastOverIdRef.current;
 
-    if (!over || active.id === over.id) {
+    if (
+      overId === activeId &&
+      lastOverIdRef.current &&
+      lastOverIdRef.current !== activeId
+    ) {
+      overId = lastOverIdRef.current;
+    }
+
+    lastOverIdRef.current = null;
+
+    if (!overId || overId === activeId) {
       return;
     }
 
-    setBoard((prev) => ({
-      ...prev,
-      columns: moveCard(prev.columns, active.id as string, over.id as string),
-    }));
+    setBoard((prev) => {
+      const activeColumnId = findColumnId(prev.columns, activeId);
+      const overColumnId = findColumnId(prev.columns, overId);
+
+      if (!activeColumnId || !overColumnId) {
+        return prev;
+      }
+
+      if (activeColumnId !== overColumnId) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        columns: moveCard(prev.columns, activeId, overId),
+      };
+    });
   };
 
   const handleRenameColumn = (columnId: string, title: string) => {
     setBoard((prev) => ({
       ...prev,
       columns: prev.columns.map((column) =>
-        column.id === columnId ? { ...column, title } : column
+        column.id === columnId ? { ...column, title } : column,
       ),
     }));
   };
@@ -65,7 +128,7 @@ export const KanbanBoard = () => {
       columns: prev.columns.map((column) =>
         column.id === columnId
           ? { ...column, cardIds: [...column.cardIds, id] }
-          : column
+          : column,
       ),
     }));
   };
@@ -75,7 +138,7 @@ export const KanbanBoard = () => {
       return {
         ...prev,
         cards: Object.fromEntries(
-          Object.entries(prev.cards).filter(([id]) => id !== cardId)
+          Object.entries(prev.cards).filter(([id]) => id !== cardId),
         ),
         columns: prev.columns.map((column) =>
           column.id === columnId
@@ -83,13 +146,11 @@ export const KanbanBoard = () => {
                 ...column,
                 cardIds: column.cardIds.filter((id) => id !== cardId),
               }
-            : column
+            : column,
         ),
       };
     });
   };
-
-  const activeCard = activeCardId ? cardsById[activeCardId] : null;
 
   return (
     <div className="relative overflow-hidden">
@@ -107,8 +168,9 @@ export const KanbanBoard = () => {
                 Kanban Studio
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--gray-text)]">
-                Keep momentum visible. Rename columns, drag cards between stages,
-                and capture quick notes without getting buried in settings.
+                Keep momentum visible. Rename columns, drag cards between
+                stages, and capture quick notes without getting buried in
+                settings.
               </p>
             </div>
             <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-5 py-4">
@@ -118,6 +180,15 @@ export const KanbanBoard = () => {
               <p className="mt-2 text-lg font-semibold text-[var(--primary-blue)]">
                 One board. Five columns. Zero clutter.
               </p>
+              {onLogout ? (
+                <button
+                  type="button"
+                  className="mt-4 rounded-full border border-[var(--stroke)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--navy-dark)] transition hover:border-[var(--primary-blue)] hover:text-[var(--primary-blue)]"
+                  onClick={onLogout}
+                >
+                  Log out
+                </button>
+              ) : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
@@ -133,32 +204,31 @@ export const KanbanBoard = () => {
           </div>
         </header>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <section className="grid gap-6 lg:grid-cols-5">
-            {board.columns.map((column) => (
-              <KanbanColumn
-                key={column.id}
-                column={column}
-                cards={column.cardIds.map((cardId) => board.cards[cardId])}
-                onRename={handleRenameColumn}
-                onAddCard={handleAddCard}
-                onDeleteCard={handleDeleteCard}
-              />
-            ))}
-          </section>
-          <DragOverlay>
-            {activeCard ? (
-              <div className="w-[260px]">
-                <KanbanCardPreview card={activeCard} />
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+              {board.columns.map((column) => (
+                <KanbanColumn
+                  key={column.id}
+                  column={column}
+                  cards={column.cardIds.map((cardId) => board.cards[cardId])}
+                  onRename={handleRenameColumn}
+                  onAddCard={handleAddCard}
+                  onDeleteCard={handleDeleteCard}
+                />
+              ))}
+            </div>
+          </DndContext>
+
+          <AIAssistantPanel />
+        </section>
       </main>
     </div>
   );
