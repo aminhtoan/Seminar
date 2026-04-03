@@ -57,12 +57,18 @@ export const AIAssistantPanel = () => {
           // Keep fallback message when response is not valid JSON.
         }
 
-        setMessages((prev) => [...prev, { role: "error", content: errorMessage }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "error", content: errorMessage },
+        ]);
         return;
       }
 
       const payload = (await response.json()) as ChatApiSuccess;
-      setMessages((prev) => [...prev, { role: "assistant", content: payload.answer }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: payload.answer },
+      ]);
     } catch {
       setMessages((prev) => [
         ...prev,
