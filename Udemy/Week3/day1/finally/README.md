@@ -1,4 +1,7 @@
-# FinAlly
+
+=======
+# Finally — AI Trading Workstation
+>>>>>>> 33be1fd047b659c84db06c5319f2362a14775bfa
 
 FinAlly is an AI-assisted trading workstation built as an agentic coding project. The target product is a single-container app with a FastAPI backend, a Next.js frontend, live market data over SSE, a simulated portfolio, and an LLM-powered trading assistant.
 
